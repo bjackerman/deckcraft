@@ -1,7 +1,7 @@
 import { zipSync, strToU8 } from 'fflate';
 import type { AuditEntry, RenderItem, WorkerRequest, WorkerResponse } from '@/types';
 import { LOGITECH_SAFE_BYTES } from '@/utils/constants';
-import { applyNamePattern } from '@/utils/style';
+import { applyNamePattern, uniqueExportNames } from '@/utils/style';
 import { buildIconSvg } from '@/utils/svgExport';
 import { optimizeSvg } from '@/utils/svgo';
 import { fitPngUnderLimit } from './core/compliance';
@@ -52,14 +52,15 @@ async function exportZip(req: ExportReq): Promise<WorkerResponse> {
   const files: Record<string, Uint8Array> = {};
   const audit: AuditEntry[] = [];
   const plan = planExport(req.target, req.customSize);
+  const names = uniqueExportNames(req.items.map((item, index) => applyNamePattern(req.pattern, {
+    index,
+    keyName: item.name,
+    state: item.toggleState ?? 'default',
+  })));
 
   for (let i = 0; i < req.items.length; i++) {
     const item = req.items[i];
-    const base = applyNamePattern(req.pattern, {
-      index: i,
-      keyName: item.name,
-      state: item.toggleState ?? 'default',
-    });
+    const base = names[i];
     for (const entry of plan) {
       const path = `${entry.dir}/${base}.${entry.ext}`;
       if (entry.ext === 'png') {

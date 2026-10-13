@@ -6,15 +6,16 @@ import { serializeBundle, parseBundle, importProjectFile } from '@/utils/bundle'
 
 // jsdom's File/Blob lack text()/arrayBuffer(); polyfill via FileReader.
 for (const [name, method] of [['text', 'readAsText'], ['arrayBuffer', 'readAsArrayBuffer']] as const) {
-  if (typeof (Blob.prototype as any)[name] !== 'function') {
-    (Blob.prototype as any)[name] = function (this: Blob) {
-      return new Promise((resolve, reject) => {
+  if (typeof Blob.prototype[name] !== 'function') {
+    Object.defineProperty(Blob.prototype, name, { configurable: true, writable: true, value: function (this: Blob) {
+      return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(r.result);
         r.onerror = () => reject(r.error);
-        (r as any)[method](this);
+        if (method === 'readAsText') r.readAsText(this);
+        else r.readAsArrayBuffer(this);
       });
-    };
+    } });
   }
 }
 const icon = (name: string): IconItem => ({
