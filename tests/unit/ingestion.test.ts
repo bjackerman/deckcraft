@@ -4,15 +4,16 @@ import { normalizeSvg, tintSvg, handleFileUpload, svgTextToIcon, handlePaste } f
 
 // jsdom's File/Blob lack text()/arrayBuffer(); polyfill via FileReader.
 for (const [name, method] of [['text', 'readAsText'], ['arrayBuffer', 'readAsArrayBuffer']] as const) {
-  if (typeof (Blob.prototype as any)[name] !== 'function') {
-    (Blob.prototype as any)[name] = function (this: Blob) {
-      return new Promise((resolve, reject) => {
+  if (typeof Blob.prototype[name] !== 'function') {
+    Object.defineProperty(Blob.prototype, name, { configurable: true, writable: true, value: function (this: Blob) {
+      return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(r.result);
         r.onerror = () => reject(r.error);
-        (r as any)[method](this);
+        if (method === 'readAsText') r.readAsText(this);
+        else r.readAsArrayBuffer(this);
       });
-    };
+    } });
   }
 }
 const MALICIOUS = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="50" height="50" onload="alert(1)">

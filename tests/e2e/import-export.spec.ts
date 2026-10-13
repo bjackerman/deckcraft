@@ -37,3 +37,29 @@ test('project .deckcraft save/load round trip', async ({ page }) => {
   await expect(page.locator('[data-icon-id]')).toHaveCount(3, { timeout: 15_000 });
   await expect(page.getByLabel('Project title')).toHaveValue('Round Trip Deck');
 });
+
+test("duplicate icon names survive export with a constant naming pattern", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await importIcons(page, [
+    svg("#ff0000", 1),
+    svg("#00ff00", 2),
+    svg("#0000ff", 3),
+  ]);
+  await page.getByRole("button", { name: /Export Package/ }).click();
+  await page.getByLabel("File naming pattern").fill("same");
+  await page
+    .getByRole("dialog", { name: "Export package" })
+    .getByRole("button", { name: "Close" })
+    .click();
+  const files = await exportZip(page, /Elgato/);
+  expect(
+    Object.keys(files).filter((name) => name.endsWith(".png")),
+  ).toHaveLength(6);
+  for (const folder of ["144x144", "288x288@2x"]) {
+    for (const name of ["same", "same-2", "same-3"]) {
+      expect(files[`stream-deck/${folder}/${name}.png`]).toBeDefined();
+    }
+  }
+});

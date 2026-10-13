@@ -33,3 +33,16 @@ export function applyNamePattern(pattern: string, vars: { index: number; keyName
     .replace(/\{state\}/g, vars.state);
   return out.replace(/[\\/:*?"<>|]+/g, '_');
 }
+
+/** Allocates stable names unique even on case-insensitive filesystems without losing icons to ZIP collisions. */
+export function uniqueExportNames(names: string[]): string[] {
+  const used = new Set<string>();
+  return names.map((name) => {
+    const base = name.trim().replace(/[. ]+$/g, "") || "icon";
+    let candidate = base;
+    let suffix = 2;
+    while (used.has(candidate.toLowerCase())) candidate = `${base}-${suffix++}`;
+    used.add(candidate.toLowerCase());
+    return candidate;
+  });
+}

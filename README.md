@@ -17,3 +17,5 @@ Client-side PWA for batch-styling and exporting icon sets for the Logitech MX Cr
 Drop or paste SVG/PNG/WebP/JPG files, or use the icon browser. Select tiles (click, Shift/Ctrl+click, marquee), then edit background, glyph and badge styles in the sidebar; with no selection the master style is edited. Export a ZIP from the header. The Logitech folder is auto-compressed (palette quantization, then downscale) to stay under 150 KB, with an audit shown in the export dialog. Projects can be saved/loaded as `.deckcraft` files.
 
 See `docs/` for the PRD, architecture and playbook.
+
+Export naming patterns support `{index}`, `{keyName}` and `{state}`. Colliding names receive deterministic `-2`, `-3`, etc. suffixes so every icon is preserved across all output resolutions; empty names fall back to `icon`.
